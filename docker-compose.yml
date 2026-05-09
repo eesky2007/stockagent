@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  stockagent:
+    build: .
+    container_name: stockagent-dev
+    ports:
+      - "5173:5173"
+      - "5175:5175"
+    environment:
+      - PORT=5175
+      - SESSION_SECRET=dev-secret-key-change-in-production
+      - DATABASE_URL=mysql://user:password@localhost:3306/stockagent
+      - FINNHUB_API_KEY=${FINNHUB_API_KEY:-demo}
+      - LLM_PROVIDER=gemini
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-sk-demo}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID:-demo}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET:-demo}
+      - OAUTH_REDIRECT_URI=http://localhost:5173/auth/callback
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - stockagent-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: stockagent-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=stockagent
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - stockagent-network
+
+volumes:
+  mysql-data:
+
+networks:
+  stockagent-network:
+    driver: bridge
